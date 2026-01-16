@@ -6,7 +6,7 @@ export class ProductImage {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @ManyToOne(() => Product, (product) => product.images, {cascade: true})
+    @ManyToOne(() => Product, (product) => product.productImages, {onDelete: 'CASCADE'})
     product: Product;
 
     @Column({name: 'image_url'})

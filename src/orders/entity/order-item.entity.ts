@@ -1,4 +1,4 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Order } from "./order.entity";
 import { Product } from "src/products/entity/product.entity";
 
@@ -7,10 +7,10 @@ export class OrderItem {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @OneToMany(() => Order, (order) => order.orderItems, {cascade: true})
+    @ManyToOne(() => Order, (order) => order.orderItems, {onDelete: 'CASCADE'})
     order: Order;
 
-    @OneToMany(() => Product, (product) => product.orderItems, {cascade: true})
+    @ManyToOne(() => Product, (product) => product.orderItems, {onDelete: 'CASCADE'})
     product: Product;
 
     @Column()

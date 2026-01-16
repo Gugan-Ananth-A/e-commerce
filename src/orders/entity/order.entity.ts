@@ -1,5 +1,5 @@
 import { User } from "src/users/entity/user.entity";
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { OrderItem } from "./order-item.entity";
 
 @Entity({name: 'order'})
@@ -11,7 +11,7 @@ export class Order {
     user: User;
 
     @Column()
-    role: string;
+    status: string;
 
     @Column({name: 'total_price'})
     totalPrice: number;
@@ -19,6 +19,6 @@ export class Order {
     @Column({name: 'created_at', type: 'timestamptz'})
     createdAt: Date;
 
-    @ManyToOne(() => OrderItem, (item) => item.order)
+    @OneToMany(() => OrderItem, (item) => item.order, {cascade: true})
     orderItems: OrderItem[]
 }

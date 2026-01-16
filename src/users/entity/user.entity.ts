@@ -1,5 +1,6 @@
+import { RefreshToken } from "src/auth/entity/refresh_token.entity";
 import { Order } from "src/orders/entity/order.entity";
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity({name: 'user'})
 export class User{
@@ -27,4 +28,7 @@ export class User{
 
     @OneToMany(() => Order, (order) => order.user)
     orders: Order[]
+
+    @OneToOne(() => RefreshToken, (refreshToken) => refreshToken.user)
+    refreshToken: RefreshToken
 }

@@ -10,9 +10,9 @@ export class RefreshToken {
     @Column()
     token: string;
 
-    @OneToOne(() => User, (user) => user.id, {cascade: true})
+    @OneToOne(() => User, (user) => user.refreshToken, {onDelete: 'CASCADE'})
     @JoinColumn({name: 'user_id'})
-    userID: number;
+    user: User;
 
     @Column({type: 'timestamptz', name: 'expires_at'})
     expiresAt: Date;

@@ -34,6 +34,6 @@ export class Product {
     @Column({type: 'timestamptz', name: 'created_at'})
     createdAt: Date;
 
-    @OneToMany(() => ProductImage, (image) => image.product)
-    images: ProductImage[]
+    @OneToMany(() => ProductImage, (image) => image.product, {cascade: true})
+    productImages: ProductImage[]
 }
