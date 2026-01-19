@@ -26,9 +26,12 @@ export class User{
     @Column({type: 'timestamptz', name: 'updated_at'})
     updatedAt: Date;
 
-    @OneToMany(() => Order, (order) => order.user)
+    @OneToMany(() => Order, (order) => order.user, {nullable: true})
     orders: Order[]
 
-    @OneToOne(() => RefreshToken, (refreshToken) => refreshToken.user)
+    @Column()
+    hash: string;
+
+    @OneToOne(() => RefreshToken, (refreshToken) => refreshToken.user, {nullable: true})
     refreshToken: RefreshToken
 }
