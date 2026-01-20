@@ -32,6 +32,9 @@ export class User{
     @Column()
     hash: string;
 
+    @Column({ default: 0 })
+    tokenVersion: number;
+
     @OneToOne(() => RefreshToken, (refreshToken) => refreshToken.user, {nullable: true})
     refreshToken: RefreshToken
 }

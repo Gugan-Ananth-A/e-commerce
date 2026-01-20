@@ -27,7 +27,7 @@ export class AuthService {
         const isMatch = await bcrypt.compare(loginDto.password, user.hash);
         if(!isMatch) throw new UnauthorizedException('Invalid Credentials');
 
-        const tokenPayload = {sub: user.id};
+        const tokenPayload = {sub: user.id, tokenVersion: user.tokenVersion};
         const accessToken = await this.jwtService.signAsync(tokenPayload);
         const refreshTokenEntity = await this.refreshRepository.findOne({
             where: { user: user }
@@ -73,7 +73,7 @@ export class AuthService {
         storedToken.expiresAt = expiresAt;
         await this.refreshRepository.save(storedToken);
 
-        const tokenPayload = {sub: storedToken.user.id};
+        const tokenPayload = {sub: storedToken.user.id, tokenVersion: storedToken.user.tokenVersion};
         const accessToken = await this.jwtService.signAsync(tokenPayload);
 
         return {
@@ -81,6 +81,16 @@ export class AuthService {
             refreshToken: storedToken.token
         }
     }   
+
+    async logout(userID: string){
+        await this.userRepository.increment({ id: +userID }, 'tokenVersion', 1);
+        const result = await this.refreshRepository.delete({ user: {id: +userID} });
+        if(result.affected){
+            return {'message': 'Logout Success!'};
+        }else{
+            throw new NotFoundException('User ID not found!');
+        }
+    }
 
     async signup(signupDto: SignUpDto){
         const oldUser = await this.userRepository.findOne({
@@ -99,7 +109,7 @@ export class AuthService {
         });
 
         await this.userRepository.save(user);
-        const tokenPayload = {sub: user.id};
+        const tokenPayload = {sub: user.id, tokenVersion: user.tokenVersion};
         const accessToken = await this.jwtService.signAsync(tokenPayload);
         const refreshTokenEntity = await this.refreshRepository.findOne({
             where: { user: user }
