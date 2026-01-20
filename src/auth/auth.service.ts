@@ -85,7 +85,7 @@ export class AuthService {
     async logout(userID: string){
         await this.userRepository.increment({ id: +userID }, 'tokenVersion', 1);
         const result = await this.refreshRepository.delete({ user: {id: +userID} });
-        if(result.affected){
+        if(result.affected !== 0){
             return {'message': 'Logout Success!'};
         }else{
             throw new NotFoundException('User ID not found!');
