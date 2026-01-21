@@ -6,6 +6,8 @@ import { Repository } from 'typeorm';
 import { OrderItem } from './entity/order-item.entity';
 import { User } from 'src/users/entity/user.entity';
 import { Product } from 'src/products/entity/product.entity';
+import { InjectQueue } from '@nestjs/bullmq';
+import { Queue } from 'bullmq';
 
 @Injectable()
 export class OrdersService {
@@ -13,8 +15,55 @@ export class OrdersService {
         @InjectRepository(Order) private readonly orderRepository: Repository<Order>,
         @InjectRepository(User) private readonly userRepository: Repository<User>,
         @InjectRepository(OrderItem) private readonly orderItemRepository: Repository<OrderItem>,
-        @InjectRepository(Product) private readonly productRepository: Repository<Product>
+        @InjectRepository(Product) private readonly productRepository: Repository<Product>,
+        @InjectQueue('email-queue') private readonly emailQueue: Queue,
     ) {}
+
+    async sendOrderConfirmation(email: string, orderID: number, totalPrice: number) {
+        console.log('Order Cofirmation Mail Sent!');
+    }
+
+    async removeOrderItem(orderItemID: string, userID: string){
+        const user = await this.userRepository.findOne({ where: { id: +userID } });
+        if (!user) throw new UnauthorizedException('Invalid Token');
+        const orderItem = await this.orderItemRepository.findOne({
+            where: { id: +orderItemID },
+            relations: ['order', 'order.user', 'product'],
+        });
+        if (!orderItem) throw new NotFoundException('Order item not found');
+        if (orderItem.order.status !== 'PENDING') throw new BadRequestException('Cannot modify checked-out order');
+        if (user.role !== 'ADMIN' && orderItem.order.user.id !== +userID) throw new UnauthorizedException('Not your order');
+        orderItem.product.stock += orderItem.quantity;
+        await this.productRepository.save(orderItem.product);
+        orderItem.order.totalPrice -= orderItem.quantity * orderItem.price;
+        await this.orderRepository.save(orderItem.order);
+        await this.orderItemRepository.remove(orderItem);
+        return { message: 'Order item removed successfully' };
+    }
+
+    async checkout(orderID: string, userID: string){
+        const user = await this.userRepository.findOne({ where: { id: +userID } });
+        if (!user) throw new UnauthorizedException('Invalid Token');
+        const order = await this.orderRepository.findOne({ where: { id: +orderID }, relations: ['orderItems', 'user']});
+        if (!order) throw new NotFoundException('Order not found');
+        if (order.status !== 'PENDING') throw new BadRequestException('Already checked out');
+        if (order.orderItems.length === 0) throw new BadRequestException('Cannot checkout empty order');
+        if (user.role !== 'ADMIN' && order.user.id !== +userID) throw new UnauthorizedException('Not your order');
+        order.status = 'PAID'; // needs to be updated
+        await this.orderRepository.save(order);
+        await this.emailQueue.add('order-confirmation', 
+            {
+                orderID: order.id,
+                userEmail: order.user.email,
+                totalPrice: order.totalPrice
+            }, 
+            {
+                jobId: `order-confirmation-${order.id}`,
+                attempts: 3
+            },
+        );
+        return { message: 'Order checked out successfully', orderID: order.id};
+    }
 
     async createOrderItem(dto: CreateOrderItemDto, userID: string) {
         const user = await this.userRepository.findOne({where: {id: +userID}});

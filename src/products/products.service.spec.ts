@@ -13,7 +13,7 @@ const mockUserRepository = {
   update: jest.fn(),
   findOneBy: jest.fn(),
   find: jest.fn(),
-  findOne: jest.fn(),
+  findOne: jest.fn(), 
   save: jest.fn()
 }
 

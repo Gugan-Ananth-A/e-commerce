@@ -6,6 +6,8 @@ import { Product } from 'src/products/entity/product.entity';
 import { Order } from './entity/order.entity';
 import { OrderItem } from './entity/order-item.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
+import { Queue } from 'bullmq';
+import { getQueueToken } from '@nestjs/bullmq';
 
 const mockUserRepository = {
   findOne: jest.fn()
@@ -28,6 +30,9 @@ const mockOrderItemRepository = {
   save: jest.fn()
 }
 
+const mockEmailQueue = {
+  add: jest.fn()
+}
 
 describe('OrdersService', () => {
   let service: OrdersService;
@@ -40,6 +45,10 @@ describe('OrdersService', () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         OrdersService,
+        {
+          provide: getQueueToken('email-queue'),
+          useValue: mockEmailQueue,
+        },
         {
           provide: getRepositoryToken(User),
           useValue: mockUserRepository

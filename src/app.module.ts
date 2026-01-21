@@ -10,11 +10,22 @@ import { JwtModule } from '@nestjs/jwt';
 import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { redisStore } from 'cache-manager-redis-store';
+import { BullModule } from '@nestjs/bullmq';
 
 @Module({
   imports: [
     UsersModule, ConfigModule.forRoot({isGlobal: true}), 
     TypeOrmModule.forRoot(dataSourceOptions), 
+    BullModule.forRoot({
+      connection: {
+        host: 'localhost',
+        port: 6379,
+      },
+      defaultJobOptions: {
+        attempts: 3,
+      },
+      prefix: 'bullmq',
+    }),
     CacheModule.register({
       store: redisStore,
       isGlobal: true,
