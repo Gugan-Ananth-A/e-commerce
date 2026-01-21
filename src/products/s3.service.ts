@@ -7,8 +7,9 @@ export class S3Service {
   readonly client: S3Client;
 
   constructor(private readonly configService: ConfigService) {
+    const region = this.configService.getOrThrow('AWS_S3_REGION');
     this.client = new S3Client({
-      region: configService.getOrThrow('AWS_S3_REGION'),
+      region,
       credentials: {
         accessKeyId: configService.getOrThrow('AWS_ACCESS_KEY_ID'),
         secretAccessKey: configService.getOrThrow('AWS_SECRET_ACCESS_KEY'),

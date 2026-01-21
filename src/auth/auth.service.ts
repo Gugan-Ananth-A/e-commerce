@@ -136,7 +136,7 @@ export class AuthService {
             lastName: user.lastName,
             email: user.email,
             role: user.role,
-            refreshToken: user.refreshToken,
+            refreshToken: refreshTokenValue,
             authToken: accessToken,
         }
     }

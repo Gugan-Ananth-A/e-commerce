@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query, Req, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, Req, UploadedFile, UseGuards, UseInterceptors, ValidationPipe } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { AuthGuard } from 'src/auth/guard/auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -8,7 +8,7 @@ import { CreateCategoryDto } from './dto/create-category.dto';
 @Controller('products')
 export class ProductsController {
     constructor(private readonly productsService: ProductsService){}
- 
+
     @Get()
     @UseGuards(AuthGuard)
     async getProducts(
@@ -22,15 +22,9 @@ export class ProductsController {
         return this.productsService.getProducts(Number(page), Number(limit), sortBy, order, search, category);
     }
 
-    @Get(':id')
-    @UseGuards(AuthGuard)
-    async getProductByID(@Query('id') id: string){
-        return this.productsService.getProductByID(id);
-    }
-
     @Post()
     @UseGuards(AuthGuard)
-    async createProduct(@Req() request: Request, @Body() createProductDto: CreateProductDto){
+    async createProduct(@Req() request: Request, @Body(new ValidationPipe({transform: true})) createProductDto: CreateProductDto){
         const payload = request['payload'];
         return this.productsService.createProduct(createProductDto, payload.sub);
     }
@@ -59,5 +53,11 @@ export class ProductsController {
     @UseGuards(AuthGuard)
     async getPresignedURL(@Param('id') id: string, @Query('fileName') fileName: string){
         return this.productsService.getPresignedURL(fileName, id);
+    }
+
+    @Get(':id')
+    @UseGuards(AuthGuard)
+    async getProductByID(@Query('id') id: string){
+        return this.productsService.getProductByID(id);
     }
 }

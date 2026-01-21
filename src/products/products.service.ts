@@ -10,6 +10,7 @@ import { S3Service } from './s3.service';
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { ProductImage } from './entity/product-image.entity';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class ProductsService {
@@ -18,16 +19,17 @@ export class ProductsService {
         @InjectRepository(Product) private readonly productRepository: Repository<Product>,
         @InjectRepository(Category) private readonly categoryRepository: Repository<Category>,
         @InjectRepository(ProductImage) private readonly imageRepository: Repository<ProductImage>,
-        private readonly s3Service: S3Service
+        private readonly s3Service: S3Service,
+        private readonly configService: ConfigService
     ){}
     
-    async uploadProductImage(file: Express.Multer.File, productID: string) {
+    async uploadProductImage(file: Express.Multer.File, productID: string) { 
         const product = await this.productRepository.findOne({where: {id: +productID}});
         if(!product) throw new NotFoundException('Product ID not found!');
         const key = `uploads/${Date.now()}-${file.originalname}`;
         await this.s3Service.client.send(
             new PutObjectCommand({
-              Bucket: process.env.AWS_S3_BUCKET,
+              Bucket: this.configService.getOrThrow('AWS_S3_BUCKET'),
               Key: key,
               Body: file.buffer,
               ContentType: file.mimetype,
@@ -46,7 +48,7 @@ export class ProductsService {
     async getPresignedURL(fileName: string, productID: string){
         const product = await this.productRepository.findOne({where: {id: +productID}});
         if(!product) throw new NotFoundException('Product ID not found!');
-        const s3 = new S3Client({ region: process.env.AWS_REGION });
+        const s3 = new S3Client({ region: process.env.AWS_S3_REGION });
         const key = `uploads/${Date.now()}-${fileName}`;
         const command = new PutObjectCommand({
             Bucket: process.env.AWS_S3_BUCKET,
@@ -70,7 +72,11 @@ export class ProductsService {
         if(user.role !== 'ADMIN') throw new ConflictException('Only ADMIN can create a new Category');
         const exists = await this.categoryRepository.findOne({where: {name: createCategoryDto.name}});
         if(exists) throw new ConflictException('Category already exists');
-        const category = await this.categoryRepository.create(createCategoryDto);
+        const category = await this.categoryRepository.create({
+            name: createCategoryDto.name,
+            description: createCategoryDto.description,
+            createdAt: new Date()
+        });
         return await this.categoryRepository.save(category);
     }
 

@@ -1,4 +1,4 @@
-import { ArrayNotEmpty, IsArray, IsNotEmpty, IsNumber, IsString, Min } from "class-validator";
+import { ArrayNotEmpty, IsArray, IsInt, IsNotEmpty, IsNumber, IsString, Min } from "class-validator";
 
 export class CreateProductDto {
 
@@ -22,5 +22,6 @@ export class CreateProductDto {
 
     @IsArray()
     @ArrayNotEmpty()
+    @IsInt({each: true})
     categoryIDs: number[];
 }

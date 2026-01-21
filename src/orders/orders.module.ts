@@ -17,6 +17,9 @@ import { OrdersGateway } from './orders.gateway';
     BullModule.registerQueue({
       name: 'email-queue',
     }),
+    BullModule.registerQueue({
+      name: 'orders-queue',
+    }),
   ],
   controllers: [OrdersController],
   providers: [OrdersService, EmailProcessor, OrdersGateway, OrdersGateway]
