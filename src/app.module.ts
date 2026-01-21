@@ -8,13 +8,22 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { dataSourceOptions } from 'db/data-source';
 import { JwtModule } from '@nestjs/jwt';
 import { CacheInterceptor, CacheModule } from '@nestjs/cache-manager';
-import { APP_INTERCEPTOR } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { redisStore } from 'cache-manager-redis-store';
 import { BullModule } from '@nestjs/bullmq';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 @Module({
   imports: [
-    UsersModule, ConfigModule.forRoot({isGlobal: true}), 
+    UsersModule, ConfigModule.forRoot({isGlobal: true}),
+    ThrottlerModule.forRoot({
+      throttlers: [
+        {
+          ttl: 60000,
+          limit: 10
+        }
+      ]
+    }),
     TypeOrmModule.forRoot(dataSourceOptions), 
     BullModule.forRoot({
       connection: {
@@ -53,6 +62,10 @@ import { BullModule } from '@nestjs/bullmq';
     {
       provide: APP_INTERCEPTOR,
       useClass: CacheInterceptor
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard
     }
   ]
 })
