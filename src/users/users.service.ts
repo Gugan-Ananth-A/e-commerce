@@ -17,11 +17,27 @@ export class UsersService {
     async update(updateUserDto: UpdateUserDto, id: string){
         const result = await this.userRepository.update(+id, updateUserDto);
         if(result.affected === 0) throw new NotFoundException('User not found');
-        return this.userRepository.findOneBy({ id: +id });
+        const user = await this.userRepository.findOneBy({ id: +id });
+        return {
+            id: user?.id,
+            firstName: user?.firstName,
+            lastName: user?.lastName,
+            role: user?.role,
+            email: user?.email
+        }
     }
 
     async getAllUsers(){
-        return this.userRepository.find();
+        const users = await this.userRepository.find();
+        return users.map((user) => {
+            return {
+                id: user.id,
+                firstName: user.firstName,
+                lastName: user.lastName,
+                role: user.role, 
+                email: user.email
+            }
+        });
     }
 
     async changePassword(changePasswordDto: ChangePasswordDto, id: string){

@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 import { Product } from "./product.entity";
 
 @Entity('product-image')
@@ -12,9 +12,9 @@ export class ProductImage {
     @Column({name: 'image_url'})
     imageUrl: string;
 
-    @Column({name: 'created_at', type: 'timestamptz'})
+    @CreateDateColumn({name: 'created_at', type: 'timestamptz'})
     createdAt: Date;
 
-    @Column({name: 'updated_at', type: 'timestamptz'})
+    @UpdateDateColumn({name: 'updated_at', type: 'timestamptz'})
     updatedAt: Date;
 }
