@@ -8,15 +8,10 @@ export class EmailProcessor extends WorkerHost {
         super();
     }
 
-    async process(job: Job, token?: string): Promise<any> {
-        if(job.name === 'order-confirmation'){
-            const { userEmail, orderId, totalPrice } = job.data;
-
-            await this.orderService.sendOrderConfirmation(
-                userEmail,
-                orderId,
-                totalPrice,
-            );
-        }
+    async process(job: Job) {
+      if(job.name === 'order-confirmation'){
+        const { userEmail, orderId, totalPrice } = job.data;
+        await this.orderService.sendOrderConfirmation(userEmail, orderId, totalPrice);
+      }
     }
 }

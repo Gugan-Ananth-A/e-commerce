@@ -8,6 +8,7 @@ import { OrderItem } from './entity/order-item.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Queue } from 'bullmq';
 import { getQueueToken } from '@nestjs/bullmq';
+import { OrdersGateway } from './orders.gateway';
 
 const mockUserRepository = {
   findOne: jest.fn()
@@ -17,6 +18,10 @@ const mockProductRepository = {
   findOne: jest.fn(),
   save: jest.fn()
 }
+
+const mockOrdersGateway = {
+  emitOrderStatus: jest.fn(),
+};
 
 const mockOrderRepository = {
   find: jest.fn(),
@@ -34,6 +39,10 @@ const mockEmailQueue = {
   add: jest.fn()
 }
 
+const mockOrderQueue = {
+  add: jest.fn()
+}
+
 describe('OrdersService', () => {
   let service: OrdersService;
   let usersRepository: Repository<User>
@@ -46,24 +55,32 @@ describe('OrdersService', () => {
       providers: [
         OrdersService,
         {
-          provide: getQueueToken('email-queue'),
-          useValue: mockEmailQueue,
+          provide: getRepositoryToken(Order),
+          useValue: mockOrderRepository
         },
         {
           provide: getRepositoryToken(User),
           useValue: mockUserRepository
         },
         {
+          provide: getRepositoryToken(OrderItem),
+          useValue: mockOrderItemRepository
+        },
+        {
           provide: getRepositoryToken(Product),
           useValue: mockProductRepository
         },
         {
-          provide: getRepositoryToken(Order),
-          useValue: mockOrderRepository
+          provide: getQueueToken('email-queue'),
+          useValue: mockEmailQueue,
         },
         {
-          provide: getRepositoryToken(OrderItem),
-          useValue: mockOrderItemRepository
+          provide: getQueueToken('orders-queue'),
+          useValue: mockOrderQueue,
+        },
+        {
+          provide: OrdersGateway,
+          useValue: mockOrdersGateway,
         },
       ],
     }).compile();

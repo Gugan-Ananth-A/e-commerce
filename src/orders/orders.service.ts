@@ -8,6 +8,7 @@ import { User } from 'src/users/entity/user.entity';
 import { Product } from 'src/products/entity/product.entity';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
+import { OrdersGateway } from './orders.gateway';
 
 @Injectable()
 export class OrdersService {
@@ -17,6 +18,8 @@ export class OrdersService {
         @InjectRepository(OrderItem) private readonly orderItemRepository: Repository<OrderItem>,
         @InjectRepository(Product) private readonly productRepository: Repository<Product>,
         @InjectQueue('email-queue') private readonly emailQueue: Queue,
+        @InjectQueue('orders-queue') private readonly orderQueue: Queue,
+        private readonly orderGateway: OrdersGateway,
     ) {}
 
     async sendOrderConfirmation(email: string, orderID: number, totalPrice: number) {
@@ -41,6 +44,16 @@ export class OrdersService {
         return { message: 'Order item removed successfully' };
     }
 
+    async updateOrderStatus(orderID: string, status: string, userID: string){
+        const user = await this.userRepository.findOne({ where: { id: +userID } });
+        if (!user) throw new UnauthorizedException('Invalid Token');
+        const order = await this.orderRepository.findOne({ where: { id: +orderID }, relations: ['orderItems', 'user']});
+        if (!order) throw new NotFoundException('Order not found');
+        await this.orderRepository.update(+orderID, { status });
+        this.orderGateway.emitOrderStatus(orderID, status);
+        return { message: 'Order status updated successfully', orderID, status };
+    }
+
     async checkout(orderID: string, userID: string){
         const user = await this.userRepository.findOne({ where: { id: +userID } });
         if (!user) throw new UnauthorizedException('Invalid Token');
@@ -49,7 +62,7 @@ export class OrdersService {
         if (order.status !== 'PENDING') throw new BadRequestException('Already checked out');
         if (order.orderItems.length === 0) throw new BadRequestException('Cannot checkout empty order');
         if (user.role !== 'ADMIN' && order.user.id !== +userID) throw new UnauthorizedException('Not your order');
-        order.status = 'PAID'; // needs to be updated
+        await this.orderQueue.add('process-order', {orderID: order.id, userID: userID});
         await this.orderRepository.save(order);
         await this.emailQueue.add('order-confirmation', 
             {
