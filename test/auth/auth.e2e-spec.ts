@@ -22,39 +22,39 @@ describe('AuthController (e2e) - Real Service', () => {
 
   describe('/auth/signup (POST)', () => {
     it('should successfully create a new user', async () => {
-      const signUpDto = { 
-        firstName: 'real', 
-        lastName: 'test', 
+      const signupPayload = { 
+        firstName: 'Person', 
+        lastName: 'A', 
         role: 'CUSTOMER', 
-        email: 'real@test.com', 
-        password: 'StrongPassword123' 
+        email: 'person@gmail.com', 
+        password: 'Password@123' 
       };
       
       const response = await request(app.getHttpServer())
         .post('/auth/signup')
-        .send(signUpDto)
+        .send(signupPayload)
         .expect(201);
       
       expect(response.body).toHaveProperty('id');
-      expect(response.body.email).toBe(signUpDto.email);
+      expect(response.body.email).toBe(signupPayload.email);
     });
 
     it('should fail if email is already taken (Real Logic)', async () => {
-      const signUpDto = { 
-        firstName: 'dup',
-        lastName: 'test',
+      const signUpPayload = { 
+        firstName: 'Person',
+        lastName: 'B',
         role: 'CUSTOMER',
-        email: 'duplicate@test.com', 
+        email: 'person2@gmail.com', 
         password: 'password123' 
       };
       
       await request(app.getHttpServer())
         .post('/auth/signup')
-        .send(signUpDto);
+        .send(signUpPayload);
       
       return request(app.getHttpServer())
         .post('/auth/signup')
-        .send(signUpDto)
+        .send(signUpPayload)
         .expect(409);
     });
   });
@@ -62,8 +62,8 @@ describe('AuthController (e2e) - Real Service', () => {
   describe('/auth/login (POST)', () => {
     it('should return real JWT tokens for valid credentials', async () => {
       const user = { 
-        email: 'real@test.com', 
-        password: 'StrongPassword123' 
+        email: 'person@gmail.com', 
+        password: 'Password@123' 
       };
       
       await request(app.getHttpServer())
