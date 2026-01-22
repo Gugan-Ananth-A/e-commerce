@@ -70,7 +70,11 @@ export class ProductsService {
         if(user.role !== 'ADMIN') throw new ConflictException('Only ADMIN can create a new Category');
         const exists = await this.categoryRepository.findOne({where: {name: createCategoryDto.name}});
         if(exists) throw new ConflictException('Category already exists');
-        const category = await this.categoryRepository.create(createCategoryDto);
+        const category = await this.categoryRepository.create({
+            name: createCategoryDto.name,
+            description: createCategoryDto.description,
+            createdAt: new Date()
+        });
         return await this.categoryRepository.save(category);
     }
 
