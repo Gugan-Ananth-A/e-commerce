@@ -11,7 +11,7 @@ export class ProductsController {
  
     @Get()
     @UseGuards(AuthGuard)
-    async getProducts(
+    getProducts(
         @Query('page') page = 1,
         @Query('limit') limit = 10,
         @Query('sortBy') sortBy: string = 'createdAt',
@@ -24,26 +24,26 @@ export class ProductsController {
 
     @Get(':id')
     @UseGuards(AuthGuard)
-    async getProductByID(@Query('id') id: string){
+    getProductByID(@Query('id') id: string){
         return this.productsService.getProductByID(id);
     }
 
     @Post()
     @UseGuards(AuthGuard)
-    async createProduct(@Req() request: Request, @Body() createProductDto: CreateProductDto){
+    createProduct(@Req() request: Request, @Body() createProductDto: CreateProductDto){
         const payload = request['payload'];
         return this.productsService.createProduct(createProductDto, payload.sub);
     }
 
     @Get('categories')
     @UseGuards(AuthGuard)
-    async getCategories(){
+    getCategories(){
         return this.productsService.getAllCategories();
     }
 
     @Post('create-category')
     @UseGuards(AuthGuard)
-    async createCategory(@Req() request: Request, @Body() createCategoryDto: CreateCategoryDto){
+    createCategory(@Req() request: Request, @Body() createCategoryDto: CreateCategoryDto){
         const payload = request['payload'];
         return this.productsService.createCategory(createCategoryDto, payload.sub);
     }
@@ -51,13 +51,13 @@ export class ProductsController {
     @Post('image-upload/:id')
     @UseGuards(AuthGuard)
     @UseInterceptors(FileInterceptor('file'))
-    async uploadImage(@Param('id') id: string, @UploadedFile() file: Express.Multer.File){
+    uploadImage(@Param('id') id: string, @UploadedFile() file: Express.Multer.File){
         return this.productsService.uploadProductImage(file, id);
     }
 
     @Get('presigned-url/:id')
     @UseGuards(AuthGuard)
-    async getPresignedURL(@Param('id') id: string, @Query('fileName') fileName: string){
+    getPresignedURL(@Param('id') id: string, @Query('fileName') fileName: string){
         return this.productsService.getPresignedURL(fileName, id);
     }
 }
